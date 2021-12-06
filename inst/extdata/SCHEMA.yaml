@@ -1,0 +1,367 @@
+---
+package:
+  secure_dimension:
+  permissions_namespace:
+  test_namespace: "rc_test"
+role:
+  revealcore_user:
+    docstring: 'Default revealcore user role.'
+    special_role: FALSE
+    namespace_permissions:
+      rc_public: 'ruld'
+    level: 0
+    add_function:
+  operator:
+    docstring: 'Special SciDB role - see SciDB documentation.'
+    special_role: TRUE
+    namespace_permissions:
+    level: 3
+    add_function:
+  admin:
+    docstring: 'Special SciDB role - see SciDB documentation.'
+    special_role: TRUE
+    namespace_permissions:
+    level: 3
+    add_function:
+namespace:
+  rc_public:
+    is_secured: FALSE
+  rc_test:
+    is_secured: FALSE
+array:
+  # METADATA_ATTRKEY
+  METADATA_ATTRKEY:
+    entity_id: 1001
+    data_class:
+      metadata
+    data_subclass:
+      metadata_curated_values
+    namespace:
+      - rc_public
+    attributes:
+      metadata_attrkey: string
+      entity_id: int64
+    unique_fields:
+      - metadata_attrkey
+      - entity_id
+    dims:
+      metadata_attrkey_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
+    search_by_entity:
+    delete_by_entity: METADATA_ATTRKEY
+    infoArray: FALSE
+    compression_on: FALSE
+    cached: TRUE
+  # METADATA_VALUE
+  METADATA_VALUE:
+    entity_id: 1014
+    data_class:
+      metadata
+    data_subclass:
+      metadata_curated_values
+    namespace:
+      - gh_public
+    attributes:
+      ontology_category_id: int64
+      metadata_value: string
+      created: string
+      updated: string
+    dims:
+      metadata_value_id:
+        start: 0
+        end: Inf
+        chunk_interval: 10000
+        overlap: 0
+    unique_fields:
+      - ontology_category_id
+      - metadata_value
+    search_by_entity:
+    delete_by_entity: METADATA_VALUE
+    infoArray: FALSE
+    compression_on: FALSE
+    cached: TRUE
+  # ENTITY_FLEX_FIELDS
+  ENTITY_FLEX_FIELDS:
+    entity_id: 1015
+    data_class:
+      metadata_index
+    namespace:
+      - gh_secure
+    attributes:
+      metadata_value_id: int64
+    dims:
+      entity_id:
+        start: 0
+        end: Inf
+        chunk_interval: 2
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 32
+        overlap: 0
+      dataset_version:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      metadata_attrkey_id:
+        start: 0
+        end: Inf
+        chunk_interval: 2048
+        overlap: 0
+      entity_base_id:
+        start: 0
+        end: Inf
+        chunk_interval: 65536
+        overlap: 0
+    unique_fields:
+      - entity_id
+      - dataset_id
+      - dataset_version
+      - metadata_attrkey_id
+      - entity_base_id
+      - metadata_value_id
+    search_by_entity: DATASET
+    delete_by_entity: DATASET
+    infoArray: FALSE
+    compression_on: FALSE
+    cached: TRUE
+  # FEATURE_ENTITY_FLEX_FIELDS
+  FEATURE_ENTITY_FLEX_FIELDS:
+    entity_id: 2012
+    data_class:
+      feature_metadata_index
+    namespace:
+      - rc_public
+    attributes:
+      metadata_value: string
+    dims:
+      entity_id:
+        start: 0
+        end: Inf
+        chunk_interval: 2
+        overlap: 0
+      featureset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 32
+        overlap: 0
+      metadata_attrkey_id:
+        start: 0
+        end: Inf
+        chunk_interval: 2048
+        overlap: 0
+      entity_base_id:
+        start: 0
+        end: Inf
+        chunk_interval: 65536
+        overlap: 0
+    unique_fields:
+      - entity_id
+      - featureset_id
+      - metadata_attrkey_id
+      - entity_base_id
+      - metadata_value
+    search_by_entity: FEATURESET
+    delete_by_entity: FEATURESET
+    distribution: replicated
+    compression_on: FALSE
+  # PROJECT
+  PROJECT:
+    entity_id: 1002
+    data_class:
+      metadata
+    data_subclass:
+      metadata_project_tree_node
+    namespace:
+      - rc_public
+    attributes:
+      name: string
+      description: string
+      created: string
+      updated: string
+    dims:
+      project_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+    unique_fields:
+      - name
+    search_by_entity:
+    delete_by_entity: PROJECT
+    infoArray: TRUE
+    infoArray_max_keys: 1000
+    compression_on: FALSE
+  # FEATURESET
+  FEATURESET:
+    entity_id: 2001
+    data_class:
+      featuredata
+    namespace:
+      - rc_public
+    attributes:
+      name: string
+    dims:
+      featureset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
+    unique_fields:
+      - name
+    search_by_entity:
+    delete_by_entity: FEATURESET
+    distribution: replicated
+    compression_on: FALSE
+    default_value: "build(<name:string> [featureset_id=0:0], 'system_reserved')"
+  # FEATURE
+  FEATURE:
+    entity_id: 2002
+    data_class:
+      featuredata
+    namespace:
+      - rc_public
+    attributes:
+      name: string
+      gene_symbol: string
+      feature_type: string
+      source: string
+      created: string
+      updated: string
+    unique_fields:
+      - featureset_id
+      - name
+      - gene_symbol
+      - feature_type
+    dims:
+      featureset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      gene_symbol_id:
+        start: 0
+        end: Inf
+        chunk_interval: 5000
+        overlap: 0
+      feature_id:
+        start: 0
+        end: Inf
+        chunk_interval: 65536
+        overlap: 0
+    search_by_entity: FEATURESET
+    delete_by_entity: FEATURE
+    infoArray: TRUE
+    infoArray_max_keys: 1000
+    compression_on: FALSE
+  # GENE_SYMBOL
+  GENE_SYMBOL:
+    entity_id: 2004
+    data_class:
+      featuredata
+    namespace:
+      - rc_public
+    attributes:
+      gene_symbol: string
+      symbol_type: string
+      full_name: string
+    unique_fields:
+      - gene_symbol
+      - symbol_type
+    dims:
+      gene_symbol_id:
+        start: 0
+        end: Inf
+        chunk_interval: 65536
+        overlap: 0
+    search_by_entity:
+    delete_by_entity: GENE_SYMBOL
+    infoArray: FALSE
+    compression_on: FALSE
+  # GENELIST
+  GENELIST:
+    entity_id: 3001
+    data_class:
+      featuredata
+    namespace:
+      - rc_public
+    attributes:
+      name: string
+      description: string
+      public: bool
+      owner: string
+      created: string
+      updated: string
+    dims:
+      genelist_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
+    unique_fields:
+      - name
+      - owner
+    search_by_entity:
+    delete_by_entity: GENELIST
+    infoArray: FALSE
+    compression_on: FALSE
+  # GENELIST_GENE
+  GENELIST_GENE:
+    entity_id: 3002
+    data_class:
+      featuredata
+    namespace:
+      - rc_public
+    attributes:
+      genelist_id: int64
+      gene_symbol_id: int64
+      gene_symbol: string
+      full_name: string
+      created: string
+      updated: string
+    dims:
+      genelist_gene_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000000
+        overlap: 0
+    unique_fields:
+      - genelist_id
+      - gene_symbol
+    search_by_entity: GENELIST
+    delete_by_entity: GENELIST_GENE
+    infoArray: FALSE
+    compression_on: FALSE
+  # GENE_SYMBOL_ALIAS
+  GENE_SYMBOL_ALIAS:
+    entity_id: 2008
+    data_class:
+      featuredata
+    namespace:
+      - rc_public
+    attributes:
+      gene_symbol_hgnc: string
+      gene_symbol_alias: string
+    unique_fields:
+      - gene_symbol_hgnc
+      - gene_symbol_alias
+    dims:
+      hgnc_id:
+        start: 0
+        end: Inf
+        chunk_interval: 65536
+        overlap: 0
+      alias_id:
+        start: 0
+        end: Inf
+        chunk_interval: 65536
+        overlap: 0
+    search_by_entity:
+    delete_by_entity:
+    infoArray: FALSE
+    compression_on: FALSE

@@ -1,0 +1,32 @@
+Package: revealcore
+Type: Package
+Title: SciDB REVEAL/Genomics API
+Version: 0.0.1
+Date: 2021-12-06
+Author: C. Michael Pietras, Kriti Sen Sharma
+Maintainer: C. Michael Pietras <mpietras@paradigm4.com>
+Description: Core API for various REVEAL packages
+Depends:
+    data.table,
+    tidyr,
+    plyr,
+    dplyr,
+    yaml
+Imports:
+    R6,
+    reshape
+Remotes:
+    Paradigm4/scidbr
+License: file LICENSE
+LazyData: TRUE
+Suggests: testthat,
+    knitr,
+    rmarkdown,
+    rtracklayer,
+    esetVis,
+    mpm,
+    svd,
+    corpcor
+VignetteBuilder: knitr
+RoxygenNote: 7.1.1
+Roxygen: list(markdown = TRUE)
