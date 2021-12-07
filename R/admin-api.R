@@ -14,16 +14,18 @@
 #'
 #' @export
 get_logged_in_user = function(con) {
-  attr(con$db, "connection")$username
+  con_core$username
 }
 
 #' List all users
 #'
 #' @export
 list_users = function(con) {
-  iquery(con$db, "project(list('users'), name)",
-         return=T, only_attributes=T,
-         schema="<user_name:string>[i]")
+  iquery(con$db,
+         "project(list('users'), id, name)",
+         return=T,
+         only_attributes=T,
+         schema="<user_id:int64, user_name:string>[i]")
 }
 
 #' Add a user to a role
@@ -62,7 +64,7 @@ add_user_to_role = function(pkgEnv, con, user_name, role, add_to_inferior_roles=
         do.call(eval(parse(text=pkgEnv$meta$L$role[[role]]$add_function)),
                 args=list(con=con, user_name=user_name))
       } else {
-        add_user_to_role_internal(user_name = user_name, role = role, con = con)
+        add_user_to_role_call(user_name = user_name, role = role, con = con)
       }
     }
   }
