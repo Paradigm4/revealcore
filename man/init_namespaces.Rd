@@ -4,7 +4,13 @@
 \alias{init_namespaces}
 \title{Initialize namespaces associated with a REVEAL package}
 \usage{
-init_namespaces(pkgEnv, con, namespaces_to_init = NULL)
+init_namespaces(
+  pkgEnv,
+  con,
+  namespaces_to_init = NULL,
+  force = FALSE,
+  silent = FALSE
+)
 }
 \description{
 Initialize namespaces associated with a REVEAL package

@@ -4,7 +4,7 @@
 \alias{init_roles}
 \title{Initialize roles associated with a REVEAL package}
 \usage{
-init_roles(pkgEnv, con, roles_to_init = NULL)
+init_roles(pkgEnv, con, roles_to_init = NULL, force = FALSE, silent = FALSE)
 }
 \description{
 Initialize roles associated with a REVEAL package
