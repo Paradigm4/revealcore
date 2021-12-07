@@ -39,31 +39,29 @@ init_permissions_array = function(pkgEnv, con) {
 
 }
 
-#' Initialize arrays associated with a REVEAL package
+#' Delete and initialize arrays associated with a REVEAL package
 #'
 #' @export
-init_arrays = function(pkgEnv, con,
+init_arrays = function(pkgEnv,
+                       con,
                        arrays_to_init = NULL,
-                       pattern_array_names = NULL,
                        allow_array_reinit = FALSE,
                        force = FALSE,
                        silent = FALSE){
   db = con$db
   L = pkgEnv$meta$L
 
-  if ((is.null(arrays_to_init) & is.null(pattern_array_names)) |
-      (!is.null(arrays_to_init) & !is.null(pattern_array_names))) {
-    stop("Only one of the two parameters can have a non-null value:
-         `arrays_to_init` or `pattern_array_names`.
-         Both cannot be null.")
+  all_arrays = get_entity_names(pkgEnv)
+  if(!is.null(arrays_to_init)){
+    arrays_to_init = intersect(all_arrays, arrays_to_init)
   }
-  if (!is.null(arrays_to_init)) {
-    arrays_to_init = arrays_to_init[arrays_to_init %in% names(L$array)]
+  else{
+    arrays_to_init = all_arrays
   }
-  else if (!is.null(pattern_array_names)) {
-    stopifnot(length(pattern_array_names) == 1)
-    arrays_to_init = names(L$array)[grep(pattern = pattern_array_names,
-                                         x = names(L$array))]
+
+  init_in_namespaces = sapply(arrays_to_init, function(x) find_namespace(pkgEnv = pkgEnv, con = con, entitynm = x))
+  if(!all(init_in_namespaces %in% c("public", names(.rcEnv$meta$L$namespace)))){
+    stop("Schema document contains arrays in namespaces not defined by schema document.  Check before continuing.")
   }
 
   if(!allow_array_reinit & !con$use_test_namespace){
@@ -78,23 +76,12 @@ init_arrays = function(pkgEnv, con,
 
   if (length(arrays_to_init) == 0) {cat("ERROR: Check array names\n"); return(FALSE)}
 
-  cat("CAUTION: The following arrays will be deleted and reinitialized\n",
-      paste(sapply(arrays_to_init, function(x){full_arrayname(pkgEnv, x, con)}), collapse = ", "), "\n Proceed?")
-  if (!force) {
-    response <- readline("(Y)es/(N)o: ")
-  }
-  else {
-    response = 'yes'
-  }
-  if ( (tolower(response) == 'y' | tolower(response) == 'yes') & !is.na(response)) {
-    cat("Proceeding with initialization of DB\n")
-  }
-  else{
-    cat("Canceled initialization of DB\n")
+  if(!get_confirmation(paste0("CAUTION: The following arrays will be deleted and reinitialized\n",
+                              paste(sapply(arrays_to_init, function(x){full_arrayname(pkgEnv, x, con)}), collapse = ", ")),force)){
     return(FALSE)
   }
 
-  if (is_scidb_ee(con)) {
+  if (is_scidb_ee(con) & !is.null(PERMISSIONS_ARRAY(pkgEnv, con))) {
     if (identical(arrays_to_init, get_entity_names(pkgEnv))) {
       if (!force) {
         cat("You asked to initialize all arrays. Should I initialize the permissions array too?\n")
@@ -181,7 +168,19 @@ init_arrays = function(pkgEnv, con,
     }}
     default_value = arr$default_value
     if (!is.null(default_value)){
-      stop("TODO: Initialize default value")
+      tryCatch({
+        query = paste0(
+          "store(redimension(",default_value,", ",
+          fullnm,
+          "), ",
+          fullnm,
+          ")"
+        )
+        if (!silent) message("running: ", query)
+        iquery(db,query)
+      },
+      error = function(e){cat("=== faced error initializing default value for array: ", fullnm, "\n", sep="")}
+      )
     }
   }
 
@@ -195,7 +194,7 @@ init_arrays = function(pkgEnv, con,
 
   if ( (tolower(resp_perm) == 'y' | tolower(resp_perm) == 'yes') & !is.na(resp_perm)) {
     cat("Proceeding with initialization of permissions array\n")
-    init_permissions_array(con = con)
+    init_permissions_array(pkgEnv = pkgEnv, con = con)
   } else{
     cat("Not initalizing permissions array\n")
   }
@@ -204,24 +203,41 @@ init_arrays = function(pkgEnv, con,
 #' Initialize namespaces associated with a REVEAL package
 #'
 #' @export
-init_namespaces = function(pkgEnv, con, namespaces_to_init = NULL) {
+init_namespaces = function(pkgEnv,
+                           con,
+                           namespaces_to_init = NULL,
+                           force = FALSE,
+                           silent = FALSE) {
   namespace = scidb::iquery(con$db, "list('namespaces')", T)
-  namespace = setdiff(names(schema$namespace), namespace$name)
+  namespace = setdiff(names(pkgEnv$meta$L$namespace), namespace$name)
   if(!is.null(namespaces_to_init)){
     namespace = intersect(namespace, namespaces_to_init)
   }
 
-  message(paste0("Creating namespaces: ", paste(namespace, collapse = ", ")))
+  if(length(namespace)==0) return(FALSE)
+  if(!get_confirmation(paste0("The following namespaces will be initialized:\n ", paste(namespace, collapse = ", ")),force)){
+    return(FALSE)
+  }
 
   for(ns in namespace){
-    scidb::iquery(paste0("create_namespace('", ns, "')"))
+    tryCatch({
+      query = paste0("create_namespace('", ns, "')")
+      if (!silent) message("running: ", query, "")
+      scidb::iquery(con$db, query)
+    },
+    error = function(e){cat("=== faced error in creating namespace:", ns, "\n")}
+    )
   }
 }
 
 #' Initialize roles associated with a REVEAL package
 #'
 #' @export
-init_roles = function(pkgEnv, con, roles_to_init = NULL) {
+init_roles = function(pkgEnv,
+                      con,
+                      roles_to_init = NULL,
+                      force = FALSE,
+                      silent = FALSE) {
 
   roles = scidb::iquery(con$db, "list('roles')", T)
   roles = setdiff(names(pkgEnv$meta$L$role), roles$name)
@@ -229,13 +245,22 @@ init_roles = function(pkgEnv, con, roles_to_init = NULL) {
     roles = intersect(roles, roles_to_init)
   }
 
-  message(paste0("Creating and assigning permissions for roles: ", paste(roles, collapse = ", ")))
+  if(length(roles)==0) return(FALSE)
+  if(!get_confirmation(paste0("The following roles will be initialized:\n ", paste(roles, collapse = ", ")),force)){
+    return(FALSE)
+  }
 
   for(role in roles){
-    scidb::iquery(paste0("create_role('", role, "')"))
-    ns_perms = pkgEnv$meta$L$role[[role]]$namespace_permissions
-    for(ns in names(ns_perms)){
-      scidb::iquery(paste0("set_role_permissions('", role, "', '", ns, "', '", ns_perms[[ns]], "')"))
-    }
+    tryCatch({
+      query = paste0("create_role('", role, "')")
+      if (!silent) message("running: ", query, " and initializing permissions")
+      scidb::iquery(con$db, query)
+      ns_perms = pkgEnv$meta$L$role[[role]]$namespace_permissions
+      for(ns in names(ns_perms)){
+        scidb::iquery(con$db, paste0("set_role_permissions('", role, "', ", ns, ", '", ns_perms[[ns]], "')"))
+      }
+    },
+    error = function(e){cat("=== faced error in creating role:", role, "\n")}
+    )
   }
 }

@@ -27,3 +27,21 @@ is_scidb_ee = function(con) !con$scidb_ce
 
 #' @export
 is_scidb_ce = function(con) con$scidb_ce
+
+get_confirmation = function(message, force=FALSE){
+  cat(paste0(message,"\n"))
+  if (!force) {
+    response <- readline(" Proceed? (Y)es/(N)o: ")
+  }
+  else {
+    response = 'yes'
+  }
+  if ( (tolower(response) == 'y' | tolower(response) == 'yes') & !is.na(response)) {
+    cat("Proceeding\n")
+    return(TRUE)
+  }
+  else{
+    cat("Canceled\n")
+    return(FALSE)
+  }
+}
