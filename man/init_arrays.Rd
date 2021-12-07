@@ -8,9 +8,9 @@ init_arrays(
   pkgEnv,
   con,
   arrays_to_init = NULL,
-  allow_array_reinit = FALSE,
   force = FALSE,
-  silent = FALSE
+  silent = FALSE,
+  allow_array_reinit = FALSE
 )
 }
 \description{

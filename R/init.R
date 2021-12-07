@@ -10,6 +10,64 @@
 #
 # END_COPYRIGHT
 
+#' Initialize or reinitialize arrays, roles, and namespaces associated with a REVEAL package
+#'
+#' The function requires that you are connected to SciDB as an user with admin privileges
+#'
+#' @param con a connection object
+#' @param pkgEnv a REVEAL package environment object
+#' @param init_arrays if TRUE, delete and initialize array.  Use with caution.
+#' @param init_namespaces if TRUE, initialize namespaces.  Run only on first-time database initialization
+#' @param init_roles if TRUE, initialize roles.  Run only on first-time database initialization
+#' @param arrays_to_init (optional) if init_arrays is TRUE, list of arrays to delete and initialize.  if NULL (default), delete and initialize all arrays
+#' @param namespaces_to_init (optional) if init_namespaces is TRUE, list of namespaces to initialize.  if NULL (default), initialize all namespaces.
+#' @param roles_to_init (optional) if init_roles is TRUE, list of roles to initialize.  if NULL (default), initialize all roles.
+#' @param force if TRUE, do not ask for confirmation prior to deletion / initialization
+#' @param silent if TRUE, suppress messaging of individual namespace / role/ array deletion & initialization
+#' @param allow_array_reinit if TRUE, allow deletion of arrays that are already initialized when init_arrays is TRUE.  if FALSE (default), initialize only arrays that do not yet exist.
+#'
+#' @return NULL
+#'
+#' @export
+init_db = function(pkgEnv,
+                   con,
+                   init_arrays = TRUE,
+                   init_namespaces = FALSE,
+                   init_roles = FALSE,
+                   arrays_to_init = NULL,
+                   namespaces_to_init = NULL,
+                   roles_to_init = NULL,
+                   force = FALSE,
+                   silent = FALSE,
+                   allow_array_reinit = FALSE){
+  if(!check_user_admin_status(con)){
+    stop("Run only with admin priviledges.")
+  }
+
+  if(init_namespaces) {
+    init_namespaces(pkgEnv = pkgEnv,
+                    con = con,
+                    namespaces_to_init = namespaces_to_init,
+                    force = force,
+                    silent = silent)
+  }
+  if(init_roles){
+    init_roles(pkgEnv = pkgEnv,
+               con = con,
+               roles_to_init = roles_to_init,
+               force = force,
+               silent = silent)
+  }
+  if(init_arrays){
+    init_arrays(pkgEnv = pkgEnv,
+                con = con,
+                arrays_to_init = arrays_to_init,
+                force = force,
+                silent = silent,
+                allow_array_reinit = allow_array_reinit)
+  }
+}
+
 #' @export
 init_permissions_array = function(pkgEnv, con) {
   db = con$db
@@ -45,9 +103,9 @@ init_permissions_array = function(pkgEnv, con) {
 init_arrays = function(pkgEnv,
                        con,
                        arrays_to_init = NULL,
-                       allow_array_reinit = FALSE,
                        force = FALSE,
-                       silent = FALSE){
+                       silent = FALSE,
+                       allow_array_reinit = FALSE){
   db = con$db
   L = pkgEnv$meta$L
 
