@@ -137,16 +137,14 @@ merge_find_matches_and_return_indices = function(m1, m2){
   return(m3)
 }
 
-.find_max_base_id_for_array = function(array_name, base_idname) {
-  curr_max = scidb::iquery(con$db, glue::glue("aggregate(apply({array_name}, idx, {base_idname}), max(idx))"), return = T)$idx_max
-  if (is.na(curr_max)) curr_max = -1
-  curr_max
-}
-.data_type_mapping_r_to_scidb = setNames(
+#' @export
+data_type_mapping_r_to_scidb = setNames(
   c('int64',   'string',    'numeric', 'logical'),
   c('integer', 'character', 'float',   'bool')
 )
-.data_type_mapping_scidb_to_r = setNames(
-  c(names(.data_type_mapping_r_to_scidb),        'integer'),
-  c(as.character(.data_type_mapping_r_to_scidb), 'int32')
+
+#' @export
+data_type_mapping_scidb_to_r = setNames(
+  c(names(data_type_mapping_r_to_scidb),        'integer'),
+  c(as.character(data_type_mapping_r_to_scidb), 'int32')
 )
