@@ -11,7 +11,8 @@ Depends:
     tidyr,
     plyr,
     dplyr,
-    yaml
+    yaml,
+    scidb
 Imports:
     R6,
     reshape
