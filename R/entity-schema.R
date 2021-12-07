@@ -36,6 +36,45 @@ yaml_to_attr_string = function(attributes, compression_on = FALSE){
   }
 }
 
+#' Get entity id
+#'
+#' Get entity id from entity name
+#'
+#' @export
+get_entity_id = function(pkgEnv, entitynm){
+  entity_names = get_entity_names(pkgEnv)
+  if (!all(entitynm %in% entity_names)) {
+    stop("The following are not valid entities: ",
+         pretty_print(entitynm[!(entitynm %in% entity_names)]))
+  }
+  if (length(entitynm) >= 1) {
+    sapply(pkgEnv$meta$L$array[entitynm], function(elem) elem$entity_id)
+  } else {
+    stop("Expect entity to be vector or length 1 or more")
+  }
+}
+
+#' Get entity name
+#'
+#' Get entity name from entity id
+#'
+#' @export
+get_entity_from_entity_id = function(pkgEnv, entity_id) {
+  entity_names = get_entity_names(pkgEnv)
+  entity_id_lookup = get_entity_id(pkgEnv, entitynm = entity_names)
+  m1 = find_matches_and_return_indices(
+    source = entity_id,
+    target = entity_id_lookup
+  )
+  if (length(m1$source_unmatched_idx) > 0) {
+    stop("No entity for entity id: ",
+         pretty_print(entity_id[m1$source_unmatched_idx]))
+  }
+  entities = names(entity_id_lookup[m1$target_matched_idx])
+  stopifnot(all(entities %in% entity_names))
+  entities
+}
+
 #' Get a list of all entity names
 #'
 #' @export
@@ -52,6 +91,7 @@ get_entity_names = function(pkgEnv, data_class = NULL){
 
 #' @export
 is_entity_secured = function(pkgEnv, entitynm, con=NULL){
+  stopifnot(entitynm %in% get_entity_names(pkgEnv))
   entitynm = strip_namespace(entitynm) # extra QC
   nmsp = find_namespace(pkgEnv, entitynm, con)
   if (is.null(nmsp)) stop("unexpected namespace output")
@@ -63,26 +103,56 @@ is_entity_secured = function(pkgEnv, entitynm, con=NULL){
 
 #' @export
 is_entity_versioned = function(pkgEnv, entitynm){
+  stopifnot(entitynm %in% get_entity_names(pkgEnv))
   "dataset_version" %in% get_idname(pkgEnv, entitynm)
 }
 
 #' @export
 is_entity_cached = function(pkgEnv, entitynm) {
-  val  = pkgEnv$meta$L$array[[entitynm]]$cached # read from SCHEMA file
-  # if no value for cached, then entity is potentially not cached
+  stopifnot(entitynm %in% get_entity_names(pkgEnv))
+  val  = pkgEnv$meta$L$array[[entitynm]]$cached
   ifelse(is.null(val), FALSE, val)
 }
 
 #' @export
 get_entity_data_class = function(pkgEnv, entitynm){
+  stopifnot(entitynm %in% get_entity_names(pkgEnv))
   pkgEnv$meta$L$array[[entitynm]]$data_class
 }
 
 #' @export
-get_idname = function(pkgEnv, arrayname){
-  local_arrnm = strip_namespace(arrayname)
-  idname = pkgEnv$meta$L$array[[local_arrnm]]$dims
+get_entity_class = function(pkgEnv, entitynm) {
+  stopifnot(entitynm %in% get_entity_names(pkgEnv))
+  pkgEnv$meta$L$array[[entitynm]]$data_class
+}
+
+#' @export
+get_idname = function(pkgEnv, entitynm){
+  stopifnot(entitynm %in% get_entity_names(pkgEnv))
+  idname = pkgEnv$meta$L$array[[entitynm]]$dims
   if (class(idname) == "character") return(idname) else return(names(idname))
+}
+
+#' @export
+get_int64fields = function(pkgEnv, entitynm){
+  stopifnot(entitynm %in% get_entity_names(pkgEnv))
+  attr_types = unlist(pkgEnv$meta$L$array[[entitynm]]$attributes)
+  int64_fields = names(attr_types[which(!(attr_types %in%
+                                            c('string', 'datetime', 'int32', 'double', 'bool')))])
+  stopifnot(all(unique(attr_types[int64_fields]) %in% c("int64", "numeric")))
+  int64_fields
+}
+
+#' @export
+get_search_by_entity = function(pkgEnv, entitynm) {
+  stopifnot(entitynm %in% get_entity_names(pkgEnv))
+  pkgEnv$meta$L$array[[entitynm]]$search_by_entity
+}
+
+#' @export
+get_delete_by_entity = function(pkgEnv, entitynm) {
+  stopifnot(entitynm %in% get_entity_names(pkgEnv))
+  pkgEnv$meta$L$array[[entitynm]]$delete_by_entity
 }
 
 #' full name of array with namespace
@@ -135,4 +205,10 @@ PERMISSIONS_ARRAY = function(pkgEnv, con=NULL) {
     return(paste0(nmspace, ".", arr))
   }
   return(NULL)
+}
+
+find_max_base_id_for_array = function(con, array_name, base_idname) {
+  curr_max = scidb::iquery(con$db, glue::glue("aggregate(apply({array_name}, idx, {base_idname}), max(idx))"), return = T)$idx_max
+  if (is.na(curr_max)) curr_max = -1
+  curr_max
 }

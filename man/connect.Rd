@@ -25,6 +25,8 @@ connect(
 
 \item{port}{if NULL, attempt to set automatically from Apache config}
 
+\item{protocol}{protocol type}
+
 \item{use_test_namespace}{if TRUE, use a single test namespace defined by the package schema}
 
 \item{multi_connection_environment}{if FALSE and the database connection is successful, store the connection object in a global environment variable.  This allows calling package functions without specifying a connection object.  Otherwise, remove connection object from global environment.}

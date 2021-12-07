@@ -21,7 +21,7 @@ connection <- setRefClass(
 #' @param password password for the user.  If null, will be requested interactively.
 #' @param host if NULL, attempt to set automatically from Apache config
 #' @param port if NULL, attempt to set automatically from Apache config
-#' @param protocol
+#' @param protocol protocol type
 #' @param results_size_limit Maximum size of any single result from a scidb query over this connection.  Query results larger than the specified size will error.
 #' @param use_test_namespace if TRUE, use a single test namespace defined by the package schema
 #' @param multi_connection_environment if FALSE and the database connection is successful, store the connection object in a global environment variable.  This allows calling package functions without specifying a connection object.  Otherwise, remove connection object from global environment.
