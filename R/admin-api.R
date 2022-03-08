@@ -19,13 +19,75 @@ get_logged_in_user = function(con) {
 
 #' List all users
 #'
+#' list the full list of users registered with scidb if the current user is an operator.  Otherwise, check a list of users that may be maintained by the package schema
+#'
 #' @export
-list_users = function(con) {
-  iquery(con$db,
-         "project(list('users'), id, name)",
-         return=T,
-         only_attributes=T,
-         schema="<user_id:int64, user_name:string>[i]")
+list_users = function(pkgEnv, con){
+  if(check_user_operator_status(con = con)){
+    iquery(con$db,
+           "project(list('users'), id, name)",
+           return=T,
+           only_attributes=T,
+           schema="<user_id:int64, user_name:string>[i]")
+  }
+  else {
+    if(!is.null(pkgEnv$meta$L$package$package_user_list_entity)){
+      message("Current user not an operator.  Checking list of package registered users rather than database authoritative list.  Run as operator for full user list.")
+      iquery(con$db, full_arrayname(.ghEnv$meta$arrUserList), T)
+    } else {
+      stop("Listing users requires operator permissions.")
+    }
+  }
+}
+
+#' set secure_scan access permissions for a user
+#'
+#' to be run only by scidbadmin, or user
+#' with Read / Write capability to \link{PERMISSIONS_ARRAY} and secured namespaces
+#'
+#' can supply multiple ids at a time.
+#'
+#' @param user_id the id of the user for whom to change permissions.  Obtained via \link{list_users}, or `-1` for all users (on Scidb 21.8 or above)
+#' @param secure_id the ids along the secure dimension to change permissions for.
+#'
+#' @export
+set_permissions = function(pkgEnv, con, user_id, secure_id, allowed){
+  if(length(user_id) != 1)
+  {
+    stop("Must specify exactly one user")
+  }
+  if(length(secure_id) < 1)
+  {
+    stop("Must specify 1 or more datasets")
+  }
+  if(!(user_id==-1 & con$aop_connection$scidb_version()$major>=21)){
+    users = list_users(pkgEnv, con = con)
+    if(!(user_id %in% users$user_id)){
+      stop("No user with specified id found.")
+    }
+  }
+  if( allowed == FALSE )
+  {
+    permission='false'
+  } else
+  {
+    permission='true'
+  }
+  secure_id_str = paste0("[", paste0("(", sprintf("%.0f", secure_id), ")", collapse=",") ,"]")
+  iquery(con$db, paste0(
+    "insert(
+      redimension(
+       apply(
+        build(<",pkgEnv$meta$L$package$secure_dimension,":int64>[i=0:*], '",secure_id_str,"', true),
+         user_id,", sprintf("%.0f", user_id), ",
+         access,", permission, "
+        ),
+        ", PERMISSIONS_ARRAY(pkgEnv, con),"
+       ),
+       ", PERMISSIONS_ARRAY(pkgEnv, con),"
+      )"))
+  max_version = max(iquery(con$db, sprintf("versions(%s)", PERMISSIONS_ARRAY(pkgEnv, con)), return=TRUE)$version_id)
+  iquery(con$db, sprintf("remove_versions(%s, %i)", PERMISSIONS_ARRAY(pkgEnv, con), max_version))
 }
 
 #' Add a user to a role

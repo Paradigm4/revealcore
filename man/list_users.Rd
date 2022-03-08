@@ -4,8 +4,8 @@
 \alias{list_users}
 \title{List all users}
 \usage{
-list_users(con)
+list_users(pkgEnv, con)
 }
 \description{
-List all users
+list the full list of users registered with scidb if the current user is an operator.  Otherwise, check a list of users that may be maintained by the package schema
 }
