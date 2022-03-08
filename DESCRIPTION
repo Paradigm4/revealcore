@@ -1,8 +1,8 @@
 Package: revealcore
 Type: Package
 Title: SciDB REVEAL/Genomics API
-Version: 0.0.1
-Date: 2021-12-06
+Version: 0.0.1.1
+Date: 2022-03-08
 Author: C. Michael Pietras, Kriti Sen Sharma
 Maintainer: C. Michael Pietras <mpietras@paradigm4.com>
 Description: Core API for various REVEAL packages
