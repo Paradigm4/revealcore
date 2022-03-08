@@ -166,6 +166,29 @@ full_arrayname = function(pkgEnv, entitynm, con = NULL) {
   paste0(find_namespace(pkgEnv, entitynm, con), ".", entitynm)
 }
 
+#' full name of array with namespace, wrapped in secure_scan if the current user needs secure_scan to read the array
+#'
+#' @inheritParams find_namespace
+#'
+#' @return the full name of the entity including namespace and potentially wrapped in secure_scan, e.g. `gh_secure.DATASET` or `secure_scan(gh_secure.DATASET, strict:false)`
+#'
+#' @export
+scan_entity = function(pkgEnv, entitynm, con){
+  namespace = find_namespace(pkgEnv, entitynm, con)
+  permissions = show_user_namespace_permissions(pkgEnv = pkgEnv,
+                                                con = con,
+                                                namespace = namespace)
+  array = paste0(namespace, ".", entitynm)
+  if(permissions$l & !permissions$r & pkgEnv$meta$L$namespace[[namespace]]$is_secured){
+    if(con$aop_connection$scidb_version()$major>=21){
+      array = paste0("secure_scan(",array,", strict:false)")
+    } else {
+      array = paste0("secure_scan(",array,")")
+    }
+  }
+  array
+}
+
 #' return the namespace of an entity
 #'
 #' @param pkgEnv the package environment

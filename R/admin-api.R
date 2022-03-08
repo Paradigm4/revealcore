@@ -14,7 +14,7 @@
 #'
 #' @export
 get_logged_in_user = function(con) {
-  con_core$username
+  con$username
 }
 
 #' List all users
@@ -29,7 +29,7 @@ list_users = function(con) {
 }
 
 #' Add a user to a role
-#' Run only with operator or admin privileges.  Admin priviledges required to grant operator or admin privileges.
+#' Run only with operator or admin privileges.  Admin privileges required to grant operator or admin privileges.
 #'
 #' @param user_name username of user to add to role
 #' @param role name of role to add user to.  See \link{show_roles}
@@ -173,24 +173,46 @@ show_roles = function(pkgEnv, con = NULL) {
 
 #' Function to check if current user has admin permissions
 #'
-#' @param con
+#' @param con a connection object
 #'
 #' @export
-check_user_admin_status = function(con){
+check_user_admin_status = function(con, user_name=NULL){
   admin_roles = c('root', 'scidbadmin', 'admin')
-  user_roles = revealgenomics:::show_roles_for_user(con=con)
+  user_roles = revealgenomics:::show_roles_for_user(con=con, user_name=user_name)
   return(any(admin_roles %in% user_roles))
 }
 
 #' Function to check if current user has operator permissions
 #'
-#' @param con
+#' @param con a connection object
 #'
 #' @export
-check_user_operator_status = function(con){
+check_user_operator_status = function(con, user_name=NULL){
   operator_roles = c('root', 'scidbadmin', 'admin', 'operator')
-  user_roles = revealgenomics:::show_roles_for_user(con=con)
+  user_roles = revealgenomics:::show_roles_for_user(con=con, user_name=user_name)
   return(any(operator_roles %in% user_roles))
+}
+
+#' Function to show what permissions a user has to a namespace according to the schema
+#'
+#' @param con a connection object
+#' @param user_name the user for whom to show permissions.  If `NULL` (default), use the current logged in user
+#' @param namespace the namespace for which to show permissions
+#'
+#' @return a list with names `c("c", "r", "u", "l", "d")` with value `TRUE` if the user has the corresponding permission in the specified namespace
+#'
+#' @export
+show_user_namespace_permissions = function(pkgEnv, con, user_name = NULL, namespace){
+  if(check_user_operator_status(con=con, user_name = user_name)){
+    return(list("c"=T,"r"=T,"u"=T,"l"=T,"d"=T))
+  }
+  roles = show_roles_for_user(con = con, user_name = user_name)
+  roles = intersect(names(pkgEnv$meta$L$role), roles)
+  role_permissions = paste(unlist(sapply(roles, function(x){pkgEnv$meta$L$role[[x]]$namespace_permissions[[namespace]]})))
+  if(length(role_permissions)==0){
+    return(list("c"=F,"r"=F,"u"=F,"l"=F,"d"=F))
+  }
+  as.list(sapply(c("c","r","u","l","d"), function(x){grepl(x, role_permissions, fixed=T)}))
 }
 
 #' Function to show rules for user

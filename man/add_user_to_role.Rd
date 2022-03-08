@@ -3,7 +3,7 @@
 \name{add_user_to_role}
 \alias{add_user_to_role}
 \title{Add a user to a role
-Run only with operator or admin privileges.  Admin priviledges required to grant operator or admin privileges.}
+Run only with operator or admin privileges.  Admin privileges required to grant operator or admin privileges.}
 \usage{
 add_user_to_role(pkgEnv, con, user_name, role, add_to_inferior_roles = TRUE)
 }
@@ -16,5 +16,5 @@ add_user_to_role(pkgEnv, con, user_name, role, add_to_inferior_roles = TRUE)
 }
 \description{
 Add a user to a role
-Run only with operator or admin privileges.  Admin priviledges required to grant operator or admin privileges.
+Run only with operator or admin privileges.  Admin privileges required to grant operator or admin privileges.
 }

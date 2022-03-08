@@ -4,10 +4,10 @@
 \alias{check_user_admin_status}
 \title{Function to check if current user has admin permissions}
 \usage{
-check_user_admin_status(con)
+check_user_admin_status(con, user_name = NULL)
 }
 \arguments{
-\item{con}{}
+\item{con}{a connection object}
 }
 \description{
 Function to check if current user has admin permissions
