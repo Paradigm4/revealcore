@@ -27,7 +27,7 @@ connect(
 
 \item{protocol}{protocol type}
 
-\item{use_test_namespace}{if TRUE, use a single test namespace defined by the package schema}
+\item{use_test_namespace}{if TRUE, use a single test namespace defined by the package schema, iff the package has such a namespace}
 
 \item{multi_connection_environment}{if FALSE and the database connection is successful, store the connection object in a global environment variable.  This allows calling package functions without specifying a connection object.  Otherwise, remove connection object from global environment.}
 

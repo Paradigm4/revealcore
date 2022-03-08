@@ -10,8 +10,8 @@ connection <- setRefClass(
     "db",
     "use_test_namespace",
     "scidb_ce",
-    "scidb_version"),
-
+    "scidb_version",
+    "aop_connection"),
   methods = list()
 )
 
@@ -23,7 +23,7 @@ connection <- setRefClass(
 #' @param port if NULL, attempt to set automatically from Apache config
 #' @param protocol protocol type
 #' @param results_size_limit Maximum size of any single result from a scidb query over this connection.  Query results larger than the specified size will error.
-#' @param use_test_namespace if TRUE, use a single test namespace defined by the package schema
+#' @param use_test_namespace if TRUE, use a single test namespace defined by the package schema, iff the package has such a namespace
 #' @param multi_connection_environment if FALSE and the database connection is successful, store the connection object in a global environment variable.  This allows calling package functions without specifying a connection object.  Otherwise, remove connection object from global environment.
 #'
 #' @return a rg_connection object
@@ -144,9 +144,10 @@ connect = function(pkgEnv,
                      port = port,
                      protocol = protocol,
                      db = db,
-                     use_test_namespace = use_test_namespace,
+                     use_test_namespace = (use_test_namespace & !is.null(pkgEnv$meta$L$package$test_namespace)),
                      scidb_ce = unset_scidb_ee_flag,
-                     scidb_version = attr(db, "connection")$scidb.version)
+                     scidb_version = attr(db, "connection")$scidb.version,
+                     aop_connection = arrayop::db_connect(db=db))
   }
   # Store a copy of connection object in package environment
   # Multi-session programs like Shiny, and the `rg_connect2` call need to explicitly delete this after rg_connect()
