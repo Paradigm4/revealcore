@@ -238,7 +238,7 @@ show_roles = function(pkgEnv, con = NULL) {
 #' @param con a connection object
 #'
 #' @export
-check_user_admin_status = function(con, user_name=NULL){
+check_user_admin_status = function(con, user_name = get_logged_in_user(con)){
   admin_roles = c('root', 'scidbadmin', 'admin')
   user_roles = revealgenomics:::show_roles_for_user(con=con, user_name=user_name)
   return(any(admin_roles %in% user_roles))
@@ -249,7 +249,7 @@ check_user_admin_status = function(con, user_name=NULL){
 #' @param con a connection object
 #'
 #' @export
-check_user_operator_status = function(con, user_name=NULL){
+check_user_operator_status = function(con, user_name = get_logged_in_user(con)){
   operator_roles = c('root', 'scidbadmin', 'admin', 'operator')
   user_roles = revealgenomics:::show_roles_for_user(con=con, user_name=user_name)
   return(any(operator_roles %in% user_roles))
@@ -264,7 +264,7 @@ check_user_operator_status = function(con, user_name=NULL){
 #' @return a list with names `c("c", "r", "u", "l", "d")` with value `TRUE` if the user has the corresponding permission in the specified namespace
 #'
 #' @export
-show_user_namespace_permissions = function(pkgEnv, con, user_name = NULL, namespace){
+show_user_namespace_permissions = function(pkgEnv, con, user_name = get_logged_in_user(con), namespace){
   if(check_user_operator_status(con=con, user_name = user_name)){
     return(list("c"=T,"r"=T,"u"=T,"l"=T,"d"=T))
   }
@@ -284,10 +284,8 @@ show_user_namespace_permissions = function(pkgEnv, con, user_name = NULL, namesp
 #' @param user_name User name of user to show roles for.  If NULL, show roles for currently logged in user
 #'
 #' @export
-show_roles_for_user = function(con, user_name = NULL) {
-  if(is.null(user_name)){
-    user_name = get_logged_in_user(con)
-  } else if(length(user_name) != 1) {
+show_roles_for_user = function(con, user_name = get_logged_in_user(con)) {
+  if(length(user_name) != 1) {
     stop("Must specify exactly one user or user_name must be NULL")
   }
   if(user_name != get_logged_in_user(con)){
