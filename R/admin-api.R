@@ -290,11 +290,18 @@ show_roles_for_user = function(con, user_name = NULL) {
   } else if(length(user_name) != 1) {
     stop("Must specify exactly one user or user_name must be NULL")
   }
-  if(user_name != get_logged_in_user(con) && !(check_user_operator_status(con))){
-    stop("Operator privileges required to examine another user's roles")
+  if(user_name != get_logged_in_user(con)){
+    if(!(check_user_operator_status(con))){
+      stop("Operator privileges required to examine another user's roles")
+    }
+    roles = iquery(con$db,paste0("show_roles_for_user('",user_name,"')"),return=T)$role
+  } else{
+    if(is.null(con$roles)){
+      roles = iquery(con$db,paste0("show_roles_for_user('",user_name,"')"),return=T)$role
+    } else {
+      roles = con$roles
+    }
   }
-
-  roles = iquery(con$db,paste0("show_roles_for_user('",user_name,"')"),return=T)$role
 
   return(roles)
 }

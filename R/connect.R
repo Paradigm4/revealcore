@@ -11,7 +11,8 @@ connection <- setRefClass(
     "use_test_namespace",
     "scidb_ce",
     "scidb_version",
-    "aop_connection"),
+    "aop_connection",
+    "roles"),
   methods = list()
 )
 
@@ -139,6 +140,7 @@ connect = function(pkgEnv,
     }
   }
   if(!is.null(db)){
+    aop_connection = arrayop::db_connect(db=db)
     con = connection(host = host,
                      username = username,
                      port = port,
@@ -146,8 +148,10 @@ connect = function(pkgEnv,
                      db = db,
                      use_test_namespace = (use_test_namespace & !is.null(pkgEnv$meta$L$package$test_namespace)),
                      scidb_ce = unset_scidb_ee_flag,
-                     scidb_version = attr(db, "connection")$scidb.version,
-                     aop_connection = arrayop::db_connect(db=db))
+                     scidb_version = aop_connection$scidb_version(),
+                     aop_connection = aop_connection,
+                     roles=iquery(db,paste0("show_roles_for_user('",
+                                            username,"')"),return=T)$role)
   }
   # Store a copy of connection object in package environment
   # Multi-session programs like Shiny, and the `rg_connect2` call need to explicitly delete this after rg_connect()
