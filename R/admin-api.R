@@ -240,7 +240,7 @@ show_roles = function(pkgEnv, con = NULL) {
 #' @export
 check_user_admin_status = function(con, user_name = get_logged_in_user(con)){
   admin_roles = c('root', 'scidbadmin', 'admin')
-  user_roles = revealgenomics:::show_roles_for_user(con=con, user_name=user_name)
+  user_roles = show_roles_for_user(con=con, user_name=user_name)
   return(any(admin_roles %in% user_roles))
 }
 
@@ -251,7 +251,7 @@ check_user_admin_status = function(con, user_name = get_logged_in_user(con)){
 #' @export
 check_user_operator_status = function(con, user_name = get_logged_in_user(con)){
   operator_roles = c('root', 'scidbadmin', 'admin', 'operator')
-  user_roles = revealgenomics:::show_roles_for_user(con=con, user_name=user_name)
+  user_roles = show_roles_for_user(con=con, user_name=user_name)
   return(any(operator_roles %in% user_roles))
 }
 

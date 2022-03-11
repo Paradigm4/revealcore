@@ -134,11 +134,6 @@ connect = function(pkgEnv,
     }
   }
 
-  if (unset_scidb_ee_flag) {
-    if (!is.null(db)) {
-      options(revealgenomics.use_scidb_ee = FALSE)
-    }
-  }
   if(!is.null(db)){
     aop_connection = arrayop::db_connect(db=db)
     con = connection(host = host,
