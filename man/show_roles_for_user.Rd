@@ -5,7 +5,7 @@
 \title{Function to show rules for user
 Operator or higher privileges required to examine roles for a user other than oneself}
 \usage{
-show_roles_for_user(con, user_name = NULL)
+show_roles_for_user(con, user_name = get_logged_in_user(con))
 }
 \arguments{
 \item{con}{connection object}

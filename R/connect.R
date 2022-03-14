@@ -1,3 +1,6 @@
+#' @importFrom scidb scidbconnect iquery
+NULL
+
 #' API Class for Querying and Computing in SciDB
 #' @seealso \code{\link{connect}} for connection instructions.
 connection <- setRefClass(
@@ -135,7 +138,7 @@ connect = function(pkgEnv,
   }
 
   if(!is.null(db)){
-    aop_connection = arrayop::db_connect(db=db)
+    aop_connection = arrayop::db_connect(db=db, save_to_default_conn=!multi_connection_environment)
     con = connection(host = host,
                      username = username,
                      port = port,
