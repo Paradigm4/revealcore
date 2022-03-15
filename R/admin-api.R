@@ -288,6 +288,7 @@ show_roles_for_user = function(con, user_name = get_logged_in_user(con)) {
   if(length(user_name) != 1) {
     stop("Must specify exactly one user or user_name must be NULL")
   }
+  if(con$scidb_version$major >= 17 & username=='root'){username='scidbadmin'}
   if(user_name != get_logged_in_user(con)){
     if(!(check_user_operator_status(con))){
       stop("Operator privileges required to examine another user's roles")

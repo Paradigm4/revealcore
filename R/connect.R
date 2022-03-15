@@ -136,6 +136,7 @@ connect = function(pkgEnv,
 
   if(!is.null(db)){
     aop_connection = arrayop::db_connect(db=db)
+    if(aop_connection$scidb_version()$major >= 17 & username=='root'){username='scidbadmin'}
     con = connection(host = host,
                      username = username,
                      port = port,
