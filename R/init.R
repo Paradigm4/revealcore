@@ -87,7 +87,9 @@ init_permissions_array = function(pkgEnv, con) {
 
   cat("Create permissions array\n")
   tryCatch({
-    iquery(db, paste0("create array ", permissions_arr, " <access:bool> [user_id=0:*:0:1; dataset_id=0:*:0:256]"))
+    iquery(db, paste0("create array ", permissions_arr,
+                      " <access:bool> [user_id=-1:*; ",
+                      pkgEnv$meta$L$package$secure_dimension,"=0:*]"))
     iquery(db, paste0("store(", permissions_arr, ", ", permissions_arr, ")"))
   },
   error = function(e) {
