@@ -270,7 +270,7 @@ show_user_namespace_permissions = function(pkgEnv, con, user_name = get_logged_i
   }
   roles = show_roles_for_user(con = con, user_name = user_name)
   roles = intersect(names(pkgEnv$meta$L$role), roles)
-  role_permissions = paste(unlist(sapply(roles, function(x){pkgEnv$meta$L$role[[x]]$namespace_permissions[[namespace]]})))
+  role_permissions = paste(unlist(sapply(roles, function(x){pkgEnv$meta$L$role[[x]]$namespace_permissions[[namespace]]})), collapse="")
   if(length(role_permissions)==0){
     return(list("c"=F,"r"=F,"u"=F,"l"=F,"d"=F))
   }
