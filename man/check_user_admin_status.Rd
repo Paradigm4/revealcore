@@ -4,7 +4,7 @@
 \alias{check_user_admin_status}
 \title{Function to check if current user has admin permissions}
 \usage{
-check_user_admin_status(con, user_name = NULL)
+check_user_admin_status(con, user_name = get_logged_in_user(con))
 }
 \arguments{
 \item{con}{a connection object}

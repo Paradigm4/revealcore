@@ -4,7 +4,7 @@
 \alias{check_user_operator_status}
 \title{Function to check if current user has operator permissions}
 \usage{
-check_user_operator_status(con, user_name = NULL)
+check_user_operator_status(con, user_name = get_logged_in_user(con))
 }
 \arguments{
 \item{con}{a connection object}

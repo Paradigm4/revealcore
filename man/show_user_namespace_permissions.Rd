@@ -4,7 +4,12 @@
 \alias{show_user_namespace_permissions}
 \title{Function to show what permissions a user has to a namespace according to the schema}
 \usage{
-show_user_namespace_permissions(pkgEnv, con, user_name = NULL, namespace)
+show_user_namespace_permissions(
+  pkgEnv,
+  con,
+  user_name = get_logged_in_user(con),
+  namespace
+)
 }
 \arguments{
 \item{con}{a connection object}
