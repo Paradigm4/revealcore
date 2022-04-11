@@ -142,9 +142,15 @@ get_idname = function(pkgEnv, entitynm){
 }
 
 #' @export
+get_fields = function(pkgEnv, entitynm){
+  stopifnot(is_entity(pkgEnv, entitynm))
+  unlist(pkgEnv$meta$L$array[[entitynm]]$attributes)
+}
+
+#' @export
 get_int64fields = function(pkgEnv, entitynm){
   stopifnot(is_entity(pkgEnv, entitynm))
-  attr_types = unlist(pkgEnv$meta$L$array[[entitynm]]$attributes)
+  attr_types = get_fields(pkgEnv, entitynm)
   int64_fields = names(attr_types[which(!(attr_types %in%
                                             c('string', 'datetime', 'int32', 'double', 'bool')))])
   stopifnot(all(unique(attr_types[int64_fields]) %in% c("int64", "numeric")))
