@@ -148,3 +148,23 @@ data_type_mapping_scidb_to_r = setNames(
   c(names(data_type_mapping_r_to_scidb),        'integer'),
   c(as.character(data_type_mapping_r_to_scidb), 'int32')
 )
+
+#' Map a string vector onto a set of new values from a list, but echo the input
+#' for items not in the map
+#'
+#' @param map List mapping items names to item values
+#' @param mapee Character vector to be mapped
+#' @return Character vector of mapped / echoed items
+map_or_echo <- function(map, mapee) {
+  stopifnot("Map is not a list" = is.list(map))
+  stopifnot("Mapee is not a string vector" = is.character(mapee))
+  result <- unlist(ifelse(mapee %in% names(map), map[mapee], mapee))
+  return(result)
+}
+
+build_template_for_dataframe <- function(df) {
+  stopifnot(is.data.frame(df))
+  types <- map_or_echo(as.list(data_type_mapping_r_to_scidb), sapply(1:ncol(df), function(x) typeof(df[, x, drop = TRUE])))
+  typespec <- paste(sprintf("%s:%s", colnames(df), types), collapse = ",")
+  return(sprintf("<%s>", typespec))
+}

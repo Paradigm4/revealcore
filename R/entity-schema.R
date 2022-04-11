@@ -36,6 +36,12 @@ yaml_to_attr_string = function(attributes, compression_on = FALSE){
   }
 }
 
+#' @export
+is_entity = function(pkgEnv, entitynm) {
+  stopifnot(is.character(entitynm) && length(entitynm) == 1)
+  return(entitynm %in% names(pkgEnv$meta$L$array))
+}
+
 #' Get entity id
 #'
 #' Get entity id from entity name
