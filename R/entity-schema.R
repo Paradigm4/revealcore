@@ -15,6 +15,7 @@
 ############################################################
 # Helper functions for using YAML schema object
 
+#' @export
 yaml_to_dim_str = function(dims, for_auto_chunking=FALSE){
   if (!for_auto_chunking) {
     paste(
@@ -28,6 +29,7 @@ yaml_to_dim_str = function(dims, for_auto_chunking=FALSE){
   }
 }
 
+#' @export
 yaml_to_attr_string = function(attributes, compression_on = FALSE){
   if (!compression_on) {
     paste(names(attributes), ":", attributes, collapse=" , ")
@@ -90,8 +92,14 @@ get_entity_names = function(pkgEnv, data_class = NULL){
 }
 
 #' @export
+is_entity = function(pkgEnv, entitynm){
+  stopifnot(is.character(entitynm), length(entitynm) > 0)
+  all(entitynm %in% get_entity_names(pkgEnv))
+}
+
+#' @export
 is_entity_secured = function(pkgEnv, entitynm, con=NULL){
-  stopifnot(entitynm %in% get_entity_names(pkgEnv))
+  stopifnot(is_entity(pkgEnv, entitynm))
   entitynm = strip_namespace(entitynm) # extra QC
   nmsp = find_namespace(pkgEnv, entitynm, con)
   if (is.null(nmsp)) stop("unexpected namespace output")
@@ -103,40 +111,46 @@ is_entity_secured = function(pkgEnv, entitynm, con=NULL){
 
 #' @export
 is_entity_versioned = function(pkgEnv, entitynm){
-  stopifnot(entitynm %in% get_entity_names(pkgEnv))
+  stopifnot(is_entity(pkgEnv, entitynm))
   "dataset_version" %in% get_idname(pkgEnv, entitynm)
 }
 
 #' @export
 is_entity_cached = function(pkgEnv, entitynm) {
-  stopifnot(entitynm %in% get_entity_names(pkgEnv))
+  stopifnot(is_entity(pkgEnv, entitynm))
   val  = pkgEnv$meta$L$array[[entitynm]]$cached
   ifelse(is.null(val), FALSE, val)
 }
 
 #' @export
 get_entity_data_class = function(pkgEnv, entitynm){
-  stopifnot(entitynm %in% get_entity_names(pkgEnv))
+  stopifnot(is_entity(pkgEnv, entitynm))
   pkgEnv$meta$L$array[[entitynm]]$data_class
 }
 
 #' @export
 get_entity_class = function(pkgEnv, entitynm) {
-  stopifnot(entitynm %in% get_entity_names(pkgEnv))
+  stopifnot(is_entity(pkgEnv, entitynm))
   pkgEnv$meta$L$array[[entitynm]]$data_class
 }
 
 #' @export
 get_idname = function(pkgEnv, entitynm){
-  stopifnot(entitynm %in% get_entity_names(pkgEnv))
+  stopifnot(is_entity(pkgEnv, entitynm))
   idname = pkgEnv$meta$L$array[[entitynm]]$dims
   if (class(idname) == "character") return(idname) else return(names(idname))
 }
 
 #' @export
+get_fields = function(pkgEnv, entitynm){
+  stopifnot(is_entity(pkgEnv, entitynm))
+  unlist(pkgEnv$meta$L$array[[entitynm]]$attributes)
+}
+
+#' @export
 get_int64fields = function(pkgEnv, entitynm){
-  stopifnot(entitynm %in% get_entity_names(pkgEnv))
-  attr_types = unlist(pkgEnv$meta$L$array[[entitynm]]$attributes)
+  stopifnot(is_entity(pkgEnv, entitynm))
+  attr_types = get_fields(pkgEnv, entitynm)
   int64_fields = names(attr_types[which(!(attr_types %in%
                                             c('string', 'datetime', 'int32', 'double', 'bool')))])
   stopifnot(all(unique(attr_types[int64_fields]) %in% c("int64", "numeric")))
@@ -145,13 +159,13 @@ get_int64fields = function(pkgEnv, entitynm){
 
 #' @export
 get_search_by_entity = function(pkgEnv, entitynm) {
-  stopifnot(entitynm %in% get_entity_names(pkgEnv))
+  stopifnot(is_entity(pkgEnv, entitynm))
   pkgEnv$meta$L$array[[entitynm]]$search_by_entity
 }
 
 #' @export
 get_delete_by_entity = function(pkgEnv, entitynm) {
-  stopifnot(entitynm %in% get_entity_names(pkgEnv))
+  stopifnot(is_entity(pkgEnv, entitynm))
   pkgEnv$meta$L$array[[entitynm]]$delete_by_entity
 }
 
