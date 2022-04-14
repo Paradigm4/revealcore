@@ -193,7 +193,7 @@ scan_entity = function(pkgEnv, entitynm, con){
                                                 con = con,
                                                 namespace = namespace)
   array = paste0(namespace, ".", entitynm)
-  if(permissions$l & !permissions$r & pkgEnv$meta$L$namespace[[namespace]]$is_secured){
+  if(permissions$l && !permissions$r && pkgEnv$meta$L$namespace[[namespace]]$is_secured){
     if(con$aop_connection$scidb_version()$major>=21){
       array = paste0("secure_scan(",array,", strict:false)")
     } else {
