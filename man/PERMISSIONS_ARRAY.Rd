@@ -4,12 +4,15 @@
 \alias{PERMISSIONS_ARRAY}
 \title{return the full name of the permissions array for a given schema}
 \usage{
-PERMISSIONS_ARRAY(pkgEnv, con = NULL)
+PERMISSIONS_ARRAY(pkgEnv, con = NULL, namespace = NULL)
 }
 \arguments{
 \item{pkgEnv}{the package environment}
 
 \item{con}{if NULL, return the name according to the package schema document. If provided, return the name used by the connection}
+
+\item{namespace}{if NULL, return the permissions array configured for the entire package.
+if not NULL, return the permissions array for the specified namespace (which may also be the global permissions array)}
 }
 \description{
 return the full name of the permissions array for a given schema

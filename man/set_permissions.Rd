@@ -4,7 +4,7 @@
 \alias{set_permissions}
 \title{set secure_scan access permissions for a user}
 \usage{
-set_permissions(pkgEnv, con, user_id, secure_id, allowed)
+set_permissions(pkgEnv, con, user_id, secure_id, allowed, namespace = NULL)
 }
 \arguments{
 \item{user_id}{the id of the user for whom to change permissions.  Obtained via \link{list_users}, or \code{-1} for all users (on Scidb 21.8 or above)}

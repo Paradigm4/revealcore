@@ -51,7 +51,7 @@ list_users = function(pkgEnv, con){
 #' @param secure_id the ids along the secure dimension to change permissions for.
 #'
 #' @export
-set_permissions = function(pkgEnv, con, user_id, secure_id, allowed){
+set_permissions = function(pkgEnv, con, user_id, secure_id, allowed, namespace=NULL){
   if(length(user_id) != 1)
   {
     stop("Must specify exactly one user")
@@ -82,12 +82,12 @@ set_permissions = function(pkgEnv, con, user_id, secure_id, allowed){
          user_id,", sprintf("%.0f", user_id), ",
          access,", permission, "
         ),
-        ", PERMISSIONS_ARRAY(pkgEnv, con),"
+        ", PERMISSIONS_ARRAY(pkgEnv, con, namespace),"
        ),
-       ", PERMISSIONS_ARRAY(pkgEnv, con),"
+       ", PERMISSIONS_ARRAY(pkgEnv, con, namespace),"
       )"))
-  max_version = max(iquery(con$db, sprintf("versions(%s)", PERMISSIONS_ARRAY(pkgEnv, con)), return=TRUE)$version_id)
-  iquery(con$db, sprintf("remove_versions(%s, %i)", PERMISSIONS_ARRAY(pkgEnv, con), max_version))
+  max_version = max(iquery(con$db, sprintf("versions(%s)", PERMISSIONS_ARRAY(pkgEnv, con, namespace)), return=TRUE)$version_id)
+  iquery(con$db, sprintf("remove_versions(%s, %i)", PERMISSIONS_ARRAY(pkgEnv, con, namespace), max_version))
 }
 
 #' Add a user to a role
@@ -231,6 +231,17 @@ show_roles = function(pkgEnv, con = NULL) {
              description=sapply(pkgEnv$meta$L$role, function(x){x$docstring}),
              stringsAsFactors = FALSE,
              row.names = NULL)
+}
+
+#' @export
+show_role_permissions = function(pkgEnv, role){
+  perms = pkgEnv$meta$L$role[[role]]$namespace_permissions
+  if(is.null(perms)){
+    perms = data.frame("namespace"=character(), "permissions"=character())
+  } else {
+    perms = data.frame("namespace"=names(perms), "permissions"=unlist(perms))
+  }
+  perms
 }
 
 #' Function to check if current user has admin permissions

@@ -324,3 +324,99 @@ init_roles = function(pkgEnv,
     )
   }
 }
+
+#' @export
+check_roles = function(pkgEnv, con){
+  roles_in_db = scidb::iquery(con$db, "list('roles')", T)$name
+  roles_in_schema = names(pkgEnv$meta$L$role)
+  missing_roles = setdiff(roles_in_schema, roles_in_db)
+  correct=T
+  if(length(missing_roles)>0){
+    message("Roles not initialized: ", paste(missing_roles, collapse = ", "))
+    correct=F
+  } else {
+    message("All roles initialized.")
+  }
+  for(role in intersect(roles_in_schema, roles_in_db)){
+    perms_in_db = iquery(con$db, paste0("show_role_permissions('",role,"')"), T)
+    perms_in_db$permissions_db = vapply(strsplit(perms_in_db$permissions, NULL), function(x) paste(sort(x), collapse = ''), '')
+    perms_in_schema = revealcore:::show_role_permissions(pkgEnv, role)
+    perms_in_schema$name = perms_in_schema$namespace
+    perms_in_schema$permissions_schema = vapply(strsplit(perms_in_schema$permissions, NULL), function(x) paste(sort(x), collapse = ''), '')
+    perms_compare = dplyr::inner_join(perms_in_db[,c("name","permissions_db")],
+                                      perms_in_schema[,c("name","permissions_schema")],
+                                      by=c("name"))
+    perms_wrong = perms_compare[perms_compare$permissions_db != perms_compare$permissions_schema,]
+    if(nrow(perms_wrong)!=0){
+      message("Permissions mismatch for ", role, " role (namespace|db|schema): ",
+              paste(sapply(1:nrow(perms_wrong),
+                           function(x){paste(perms_wrong[x,],collapse="|")}),
+                    collapse=", "))
+      correct = F
+    }
+  }
+  correct
+}
+
+#' @export
+check_namespaces = function(pkgEnv, con){
+  ns_in_db = scidb::iquery(con$db, "list('namespaces')", T)$name
+  ns_in_schema = names(pkgEnv$meta$L$namespace)
+  missing_ns = setdiff(ns_in_schema, ns_in_db)
+  correct=T
+  if(length(missing_ns)>0){
+    message("Namespaces not initialized: ", paste(missing_ns, collapse = ", "))
+    correct=F
+  } else {
+    message("All namespaces initialized.")
+  }
+  is_secured = sapply(ns_in_schema, function(x){is_namespace_secured(pkgEnv,x)})
+
+  if(any(is_secured)){
+    message("Ensure Scidb config has secure_scan configuration for pairs of namespaces and permissions arrays:\n\t",
+            paste(sapply(names(which(is_secured)),
+                         function(x){paste0(x, " <- ", PERMISSIONS_ARRAY(pkgEnv, con, x))}), collapse="\n\t"))
+  }
+  return(correct)
+}
+
+#' @export
+check_arrays = function(pkgEnv, con){
+  arrays_in_db = scidb::iquery(con$db, "list(ns:all)", T)
+  arrays_in_db$full_arrayname = sapply(1:nrow(arrays_in_db),
+                                       function(x){paste0(arrays_in_db[x,"namespace"],".",
+                                                          arrays_in_db[x,"name"])})
+  entities_in_schema = data.frame("name" = revealcore::get_entity_names(pkgEnv),
+                                  "full_arrayname" = sapply(revealcore::get_entity_names(pkgEnv),
+                                                            function(x){revealcore::full_arrayname(pkgEnv, x, con=con)}))
+  missing_arrays = setdiff(entities_in_schema$full_arrayname,
+                           arrays_in_db$full_arrayname)
+  correct=T
+  if(length(missing_arrays)>0){
+    message("Arrays not initialized: ", paste(missing_arrays, collapse = ", "))
+    correct=F
+  } else {
+    message("All arrays initialized.")
+  }
+  arrays_in_db = dplyr::inner_join(arrays_in_db, entities_in_schema, by=c("name","full_arrayname"))
+  arrays_in_db$schema = gsub(arrays_in_db$schema, pattern = " ", replacement = "")
+  arrays_in_db$schema_schema = sapply(arrays_in_db$name,
+                                      function(x){gsub(revealcore:::get_entity_schema(pkgEnv, x, T),
+                                                       pattern = " ",
+                                                       replacement = "")})
+  schema_wrong = arrays_in_db[arrays_in_db$schema_schema!=arrays_in_db$schema,]
+  if(nrow(schema_wrong != 0)){
+    correct=F
+    message("Array schema mismatch for arrays (array|db|schema):\n\t",
+            paste(sapply(1:nrow(schema_wrong),
+                         function(x){paste(schema_wrong[x,c("full_arrayname","schema","schema_schema")],collapse="|")}),
+                  collapse="\n\t"))
+  }
+
+  return(correct)
+}
+
+#' @export
+check_db = function(pkgEnv, con){
+  return(check_namespaces(pkgEnv, con) & check_roles(pkgEnv, con) & check_arrays(pkgEnv, con))
+}

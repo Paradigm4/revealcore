@@ -21,11 +21,11 @@ yaml_to_dim_str = function(dims, for_auto_chunking=FALSE){
     paste(
       names(dims), "=",
       sapply(dims, function(x) {paste(x$start, ":",
-                                      ifelse(x$end == Inf, "*", x$end), ",", x$chunk_interval, ",",
-                                      x$overlap, sep = "")}),
-      sep = "", collapse = ", ")
+                                      ifelse(x$end == Inf, "*", x$end), ":", x$overlap, ":",
+                                      x$chunk_interval, sep = "")}),
+      sep = "", collapse = "; ")
   } else {
-    paste0(names(dims), collapse = ",")
+    paste0(names(dims), collapse = ";")
   }
 }
 
@@ -36,6 +36,18 @@ yaml_to_attr_string = function(attributes, compression_on = FALSE){
   } else {
     paste(names(attributes), ":", attributes, "COMPRESSION 'zlib'", collapse=" , ")
   }
+}
+
+#' @export
+get_entity_schema = function(pkgEnv, entitynm, include_entitynm = F){
+  arr = pkgEnv$meta$L$array[[entitynm]]
+  dims = arr$dims
+  if (class(dims) == "character") {dim_str = dims} else if (class(dims) == "list"){
+    dim_str = revealcore:::yaml_to_dim_str(dims)
+  } else {stop("Unexpected class for dims")}
+  attr_str = revealcore:::yaml_to_attr_string(arr$attributes, arr$compression_on)
+  attr_str = paste("<", attr_str, ">")
+  paste0(dplyr::if_else(include_entitynm, entitynm, ""), attr_str, " [", dim_str, "]")
 }
 
 #' Get entity id
@@ -89,6 +101,24 @@ get_entity_names = function(pkgEnv, data_class = NULL){
     entities = entities[matches]
   }
   entities
+}
+
+#' @export
+is_namespace = function(pkgEnv, namespace){
+  stopifnot(is.character(namespace), length(namespace) > 0)
+  all(namespace %in% c(names(pkgEnv$meta$L$namespace),"public"))
+}
+
+#' @export
+is_namespace_secured = function(pkgEnv, namespace){
+  stopifnot(is_namespace(pkgEnv, namespace))
+  pkgEnv$meta$L$namespace[[namespace]]$is_secured
+}
+
+#' @export
+is_role = function(pkgEnv, role){
+  stopifnot(is.character(role), length(role) > 0)
+  all(role %in% names(pkgEnv$meta$L$role))
 }
 
 #' @export
@@ -227,19 +257,38 @@ find_namespace = function(pkgEnv, entitynm, con = NULL) {
 #' return the full name of the permissions array for a given schema
 #'
 #' @inheritParams find_namespace
+#' @param namespace if NULL, return the permissions array configured for the entire package.
+#' if not NULL, return the permissions array for the specified namespace (which may also be the global permissions array)
 #'
 #' @export
-PERMISSIONS_ARRAY = function(pkgEnv, con=NULL) {
-  arr = pkgEnv$meta$L$package$secure_dimension
-  if(is.null(con)){
-    nmspace = pkgEnv$meta$L$package$permissions_namespace
+PERMISSIONS_ARRAY = function(pkgEnv, con=NULL, namespace = NULL) {
+  stopifnot(is.null(namespace) || is_namespace(pkgEnv, namespace))
+  arr = NULL
+  if(!is.null(namespace)){
+    if(!is_namespace_secured(pkgEnv, namespace)){
+      return(NULL)
+    }
+    arr = pkgEnv$meta$L$namespace[[namespace]]$secure_entity
   }
-  else if(is_scidb_ce(con)){nmspace = "public"}
-  else if(con$use_test_namespace){nmspace = pkgEnv$meta$L$package$test_namespace}
-  else{nmspace = pkgEnv$meta$L$package$permissions_namespace}
+  if(is.null(arr)){
+    arr = pkgEnv$meta$L$package$secure_entity
+  }
+  if(!is.null(arr)){
+    return(full_arrayname(pkgEnv = pkgEng, entitynm = arr, con = con))
+  }
+  # allow original method of specifying a secure_dimension for the package and building PERMISSIONS_ARRAY implicitly
+  else {
+    arr = pkgEnv$meta$L$package$secure_dimension
+    if(is.null(con)){
+      nmspace = pkgEnv$meta$L$package$permissions_namespace
+    }
+    else if(is_scidb_ce(con)){nmspace = "public"}
+    else if(con$use_test_namespace){nmspace = pkgEnv$meta$L$package$test_namespace}
+    else{nmspace = pkgEnv$meta$L$package$permissions_namespace}
 
-  if(!is.null(arr) & !is.null(nmspace)){
-    return(paste0(nmspace, ".", arr))
+    if(!is.null(arr) & !is.null(nmspace)){
+      return(paste0(nmspace, ".", arr))
+    }
   }
   return(NULL)
 }
