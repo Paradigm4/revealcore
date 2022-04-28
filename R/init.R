@@ -339,14 +339,18 @@ check_roles = function(pkgEnv, con){
   }
   for(role in intersect(roles_in_schema, roles_in_db)){
     perms_in_db = iquery(con$db, paste0("show_role_permissions('",role,"')"), T)
+    perms_in_db = perms_in_db[perms_in_db$entity == "namespace",]
+    perms_in_db = perms_in_db[perms_in_db$name %in% names(pkgEnv$meta$L$namespace),]
     perms_in_db$permissions_db = vapply(strsplit(perms_in_db$permissions, NULL), function(x) paste(sort(x), collapse = ''), '')
     perms_in_schema = revealcore:::show_role_permissions(pkgEnv, role)
     perms_in_schema$name = perms_in_schema$namespace
     perms_in_schema$permissions_schema = vapply(strsplit(perms_in_schema$permissions, NULL), function(x) paste(sort(x), collapse = ''), '')
-    perms_compare = dplyr::inner_join(perms_in_db[,c("name","permissions_db")],
+    perms_compare = dplyr::full_join(perms_in_db[,c("name","permissions_db")],
                                       perms_in_schema[,c("name","permissions_schema")],
                                       by=c("name"))
-    perms_wrong = perms_compare[perms_compare$permissions_db != perms_compare$permissions_schema,]
+    perms_wrong = perms_compare[is.na(perms_compare$permissions_db) |
+                                is.na(perms_compare$permissions_schema) |
+                                perms_compare$permissions_db != perms_compare$permissions_schema,]
     if(nrow(perms_wrong)!=0){
       message("Permissions mismatch for ", role, " role (namespace|db|schema): ",
               paste(sapply(1:nrow(perms_wrong),
