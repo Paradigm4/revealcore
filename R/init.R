@@ -120,7 +120,7 @@ init_arrays = function(pkgEnv,
   }
 
   init_in_namespaces = sapply(arrays_to_init, function(x) find_namespace(pkgEnv = pkgEnv, con = con, entitynm = x))
-  if(!all(init_in_namespaces %in% c("public", names(.rcEnv$meta$L$namespace)))){
+  if(!all(init_in_namespaces %in% c("public", names(pkgEnv$meta$L$namespace)))){
     stop("Schema document contains arrays in namespaces not defined by schema document.  Check before continuing.")
   }
 
@@ -246,10 +246,10 @@ init_arrays = function(pkgEnv,
 
   # Clean up any package cache
   if (!silent) message("Cleaning up any local cache values")
-  .ghEnv$cache$lookup = list()
+  pkgEnv$cache$lookup = list()
   cached_entities = get_entity_names(pkgEnv)[sapply(get_entity_names(pkgEnv), function(x){is_entity_cached(pkgEnv, x)})]
   for (entity in cached_entities) {
-    .ghEnv$cache[[entity]] = NULL
+    pkgEnv$cache[[entity]] = NULL
   }
 
   if ( (tolower(resp_perm) == 'y' | tolower(resp_perm) == 'yes') & !is.na(resp_perm)) {

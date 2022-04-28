@@ -274,7 +274,7 @@ PERMISSIONS_ARRAY = function(pkgEnv, con=NULL, namespace = NULL) {
     arr = pkgEnv$meta$L$package$secure_entity
   }
   if(!is.null(arr)){
-    return(full_arrayname(pkgEnv = pkgEng, entitynm = arr, con = con))
+    return(full_arrayname(pkgEnv = pkgEnv, entitynm = arr, con = con))
   }
   # allow original method of specifying a secure_dimension for the package and building PERMISSIONS_ARRAY implicitly
   else {

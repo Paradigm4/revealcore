@@ -33,7 +33,7 @@ list_users = function(pkgEnv, con){
   else {
     if(!is.null(pkgEnv$meta$L$package$package_user_list_entity)){
       message("Current user not an operator.  Checking list of package registered users rather than database authoritative list.  Run as operator for full user list.")
-      iquery(con$db, full_arrayname(.ghEnv$meta$arrUserList), T)
+      iquery(con$db, full_arrayname(pkgEnv$meta$arrUserList), T)
     } else {
       stop("Listing users requires operator permissions.")
     }
@@ -73,12 +73,17 @@ set_permissions = function(pkgEnv, con, user_id, secure_id, allowed, namespace=N
   {
     permission='true'
   }
+  if(!is.null(namespace) && !is.null(pkgEnv$meta$L$namespace[[namespace]]$secure_dimension)){
+    secure_dimension = pkgEnv$meta$L$namespace[[namespace]]$secure_dimension
+  } else {
+    secure_dimension = pkgEnv$meta$L$package$secure_dimension
+  }
   secure_id_str = paste0("[", paste0("(", sprintf("%.0f", secure_id), ")", collapse=",") ,"]")
   iquery(con$db, paste0(
     "insert(
       redimension(
        apply(
-        build(<",pkgEnv$meta$L$package$secure_dimension,":int64>[i=0:*], '",secure_id_str,"', true),
+        build(<",secure_dimension,":int64>[i=0:*], '",secure_id_str,"', true),
          user_id,", sprintf("%.0f", user_id), ",
          access,", permission, "
         ),
