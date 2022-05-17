@@ -60,7 +60,13 @@ set_permissions = function(pkgEnv, con, user_id, secure_id, allowed, namespace=N
   {
     stop("Must specify 1 or more datasets")
   }
-  if(!(user_id==-1 & con$aop_connection$scidb_version()$major>=21)){
+  if(!(user_id==-1 &
+       (con$scidb_version$major>=21 |
+        (con$scidb_version$major==19 &&
+         con$scidb_version$minor==11 &&
+         con$scidb_version$patch>=8)
+        )
+       )){
     users = list_users(pkgEnv, con = con)
     if(!(user_id %in% users$user_id)){
       stop("No user with specified id found.")

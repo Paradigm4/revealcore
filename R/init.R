@@ -73,6 +73,9 @@ init_permissions_array = function(pkgEnv, con) {
   db = con$db
 
   permissions_arr = PERMISSIONS_ARRAY(pkgEnv, con)
+  if(is_entity(strip_namespace(PERMISSIONS_ARRAY(pkgEnv, con)))){
+    stop("Permissions array configured as entity.  Manage with init_arrays.")
+  }
   if(is.null(permissions_arr)){
     stop("Permissions array not configured.")
   }
@@ -86,9 +89,17 @@ init_permissions_array = function(pkgEnv, con) {
   })
 
   cat("Create permissions array\n")
+  starting_dimension="0"
+  if(con$scidb_version$major>=21 |
+      (con$scidb_version$major==19 &&
+         con$scidb_version$minor==11 &&
+         con$scidb_version$patch>=8)
+  ){
+    starting_dimension="-1"
+  }
   tryCatch({
     iquery(db, paste0("create array ", permissions_arr,
-                      " <access:bool> [user_id=-1:*; ",
+                      " <access:bool> [user_id=",starting_dimension,":*; ",
                       pkgEnv$meta$L$package$secure_dimension,"=0:*]"))
     iquery(db, paste0("store(", permissions_arr, ", ", permissions_arr, ")"))
   },
