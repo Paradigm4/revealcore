@@ -1,7 +1,7 @@
 ---
 package:
   secure_dimension: "project_id"
-  permissions_namespace: "rc_public"
+  permissions_namespace: "rc_permissions"
   test_namespace: "rc_test"
 role:
   revealcore_user:
@@ -9,6 +9,7 @@ role:
     special_role: FALSE
     namespace_permissions:
       rc_public: 'ruld'
+      rc_secure: 'l'
     level: 0
     add_function:
   operator:
@@ -27,6 +28,12 @@ namespace:
   rc_public:
     is_secured: FALSE
   rc_test:
+    is_secured: FALSE
+  rc_secure:
+    is_secured: TRUE
+    secure_dimension: "dataset_id"
+    secure_entity: PERM_DATASET
+  rc_permissions:
     is_secured: FALSE
 array:
   # METADATA_ATTRKEY
@@ -364,4 +371,59 @@ array:
     search_by_entity:
     delete_by_entity:
     infoArray: FALSE
+    compression_on: FALSE
+  # PERM_DATASET
+  PERM_DATASET:
+    entity_id: 0001
+    data_class:
+      permissions
+    namespace:
+      - rc_permissions
+    attributes:
+      access: bool
+    unique_fields:
+    dims:
+      user_id:
+        start: -1
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1
+        overlap: 0
+    search_by_entity:
+    delete_by_entity:
+    infoArray: FALSE
+    compression_on: FALSE
+    distribution: replicated
+  # DATASET
+  DATASET:
+    entity_id: 1003
+    data_class:
+      metadata
+    data_subclass:
+      metadata_project_tree_node
+    namespace:
+      - rc_secure
+    attributes:
+      name: string
+    dims:
+      project_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+      dataset_id:
+        start: 0
+        end: Inf
+        chunk_interval: 1000
+        overlap: 0
+    unique_fields:
+      - name
+    search_by_entity:
+    delete_by_entity: DATASET
+    infoArray: TRUE
+    infoArray_max_keys: 1000
     compression_on: FALSE

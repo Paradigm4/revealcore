@@ -50,6 +50,33 @@ get_entity_schema = function(pkgEnv, entitynm, include_entitynm = F){
   paste0(dplyr::if_else(include_entitynm, entitynm, ""), attr_str, " [", dim_str, "]")
 }
 
+#' @export
+schema_str_to_yaml = function(schema){
+  schema = gsub(" ", "", schema)
+  schema = strsplit(schema, split = "<|>")[[1]]
+  if(length(schema)>2){
+    schema = tail(schema,2)
+  }
+  attributes = schema[[1]]
+  dimensions = gsub("^\\[|\\]$","",schema[[2]])
+  ret = list()
+  ret$attributes = list()
+  ret$dims = list()
+  for(i in strsplit(strsplit(dimensions,";")[[1]],"=")){
+    dimension = i[[1]]
+    vals = strsplit(i[[2]],":")[[1]]
+    ret$dims[[dimension]] = list()
+    ret$dims[[dimension]][["start"]] <- if(vals[[1]]=="*"){"-Inf"}else{as.numeric(vals[[1]])}
+    ret$dims[[dimension]][["end"]] <- if(vals[[2]]=="*"){"Inf"}else{as.numeric(vals[[2]])}
+    ret$dims[[dimension]][["overlap"]] <- as.numeric(vals[[3]])
+    ret$dims[[dimension]][["chunk_interval"]] <- as.numeric(vals[[4]])
+  }
+  for(j in strsplit(strsplit(attributes,",")[[1]],":")){
+    ret$attributes[[j[[1]]]] = j[[2]]
+  }
+  return(ret)
+}
+
 #' Get entity id
 #'
 #' Get entity id from entity name
@@ -274,7 +301,7 @@ PERMISSIONS_ARRAY = function(pkgEnv, con=NULL, namespace = NULL) {
     arr = pkgEnv$meta$L$package$secure_entity
   }
   if(!is.null(arr)){
-    return(full_arrayname(pkgEnv = pkgEng, entitynm = arr, con = con))
+    return(full_arrayname(pkgEnv = pkgEnv, entitynm = arr, con = con))
   }
   # allow original method of specifying a secure_dimension for the package and building PERMISSIONS_ARRAY implicitly
   else {

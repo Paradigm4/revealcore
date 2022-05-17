@@ -73,6 +73,9 @@ init_permissions_array = function(pkgEnv, con) {
   db = con$db
 
   permissions_arr = PERMISSIONS_ARRAY(pkgEnv, con)
+  if(is_entity(strip_namespace(PERMISSIONS_ARRAY(pkgEnv, con)))){
+    stop("Permissions array configured as entity.  Manage with init_arrays.")
+  }
   if(is.null(permissions_arr)){
     stop("Permissions array not configured.")
   }
@@ -86,9 +89,17 @@ init_permissions_array = function(pkgEnv, con) {
   })
 
   cat("Create permissions array\n")
+  starting_dimension="0"
+  if(con$scidb_version$major>=21 |
+      (con$scidb_version$major==19 &&
+         con$scidb_version$minor==11 &&
+         con$scidb_version$patch>=8)
+  ){
+    starting_dimension="-1"
+  }
   tryCatch({
     iquery(db, paste0("create array ", permissions_arr,
-                      " <access:bool> [user_id=-1:*; ",
+                      " <access:bool> [user_id=",starting_dimension,":*; ",
                       pkgEnv$meta$L$package$secure_dimension,"=0:*]"))
     iquery(db, paste0("store(", permissions_arr, ", ", permissions_arr, ")"))
   },
@@ -120,7 +131,7 @@ init_arrays = function(pkgEnv,
   }
 
   init_in_namespaces = sapply(arrays_to_init, function(x) find_namespace(pkgEnv = pkgEnv, con = con, entitynm = x))
-  if(!all(init_in_namespaces %in% c("public", names(.rcEnv$meta$L$namespace)))){
+  if(!all(init_in_namespaces %in% c("public", names(pkgEnv$meta$L$namespace)))){
     stop("Schema document contains arrays in namespaces not defined by schema document.  Check before continuing.")
   }
 
@@ -246,10 +257,10 @@ init_arrays = function(pkgEnv,
 
   # Clean up any package cache
   if (!silent) message("Cleaning up any local cache values")
-  .ghEnv$cache$lookup = list()
+  pkgEnv$cache$lookup = list()
   cached_entities = get_entity_names(pkgEnv)[sapply(get_entity_names(pkgEnv), function(x){is_entity_cached(pkgEnv, x)})]
   for (entity in cached_entities) {
-    .ghEnv$cache[[entity]] = NULL
+    pkgEnv$cache[[entity]] = NULL
   }
 
   if ( (tolower(resp_perm) == 'y' | tolower(resp_perm) == 'yes') & !is.na(resp_perm)) {
@@ -339,14 +350,18 @@ check_roles = function(pkgEnv, con){
   }
   for(role in intersect(roles_in_schema, roles_in_db)){
     perms_in_db = iquery(con$db, paste0("show_role_permissions('",role,"')"), T)
+    perms_in_db = perms_in_db[perms_in_db$entity == "namespace",]
+    perms_in_db = perms_in_db[perms_in_db$name %in% names(pkgEnv$meta$L$namespace),]
     perms_in_db$permissions_db = vapply(strsplit(perms_in_db$permissions, NULL), function(x) paste(sort(x), collapse = ''), '')
     perms_in_schema = revealcore:::show_role_permissions(pkgEnv, role)
     perms_in_schema$name = perms_in_schema$namespace
     perms_in_schema$permissions_schema = vapply(strsplit(perms_in_schema$permissions, NULL), function(x) paste(sort(x), collapse = ''), '')
-    perms_compare = dplyr::inner_join(perms_in_db[,c("name","permissions_db")],
+    perms_compare = dplyr::full_join(perms_in_db[,c("name","permissions_db")],
                                       perms_in_schema[,c("name","permissions_schema")],
                                       by=c("name"))
-    perms_wrong = perms_compare[perms_compare$permissions_db != perms_compare$permissions_schema,]
+    perms_wrong = perms_compare[is.na(perms_compare$permissions_db) |
+                                is.na(perms_compare$permissions_schema) |
+                                perms_compare$permissions_db != perms_compare$permissions_schema,]
     if(nrow(perms_wrong)!=0){
       message("Permissions mismatch for ", role, " role (namespace|db|schema): ",
               paste(sapply(1:nrow(perms_wrong),
