@@ -120,7 +120,7 @@ init_arrays = function(pkgEnv,
   }
 
   init_in_namespaces = sapply(arrays_to_init, function(x) find_namespace(pkgEnv = pkgEnv, con = con, entitynm = x))
-  if(!all(init_in_namespaces %in% c("public", names(.rcEnv$meta$L$namespace)))){
+  if(!all(init_in_namespaces %in% c("public", names(pkgEnv$meta$L$namespace)))){
     stop("Schema document contains arrays in namespaces not defined by schema document.  Check before continuing.")
   }
 
