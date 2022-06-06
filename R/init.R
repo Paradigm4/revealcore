@@ -200,7 +200,7 @@ init_arrays = function(pkgEnv,
     if (class(dims) == "character") {dim_str = dims} else if (class(dims) == "list"){
       dim_str = yaml_to_dim_str(dims)
     } else {stop("Unexpected class for dims")}
-    attr_str = yaml_to_attr_string(arr$attributes, arr$compression_on)
+    attr_str = yaml_to_attr_string(arr$attributes, arr$compression_on, arr$default_values)
     attr_str = paste("<", attr_str, ">")
 
     fullnm = full_arrayname(pkgEnv = pkgEnv, con = con, entitynm = name)
@@ -237,8 +237,8 @@ init_arrays = function(pkgEnv,
       }, error = function(e){cat("=== faced error in creating array: ", fullnm, "_INFO\n", sep="")}
       )
     }}
-    default_value = arr$default_value
-    if (!is.null(default_value)){
+    if ("default_value" %in% names(arr)) {
+      default_value = arr[["default_value"]]
       tryCatch({
         query = paste0(
           "store(redimension(",default_value,", ",
