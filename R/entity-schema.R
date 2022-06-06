@@ -30,11 +30,20 @@ yaml_to_dim_str = function(dims, for_auto_chunking=FALSE){
 }
 
 #' @export
-yaml_to_attr_string = function(attributes, compression_on = FALSE){
+yaml_to_attr_string = function(attributes, compression_on = FALSE, default = NULL){
+  default_value <- function(attribute_name) {
+    if (attribute_name %in% names(default)) {
+      paste("DEFAULT", default[[attribute_name]])
+    } else {
+      ""
+    }
+  }
   if (!compression_on) {
-    paste(names(attributes), ":", attributes, collapse=" , ")
+    paste(names(attributes), ":", attributes, sapply(names(attributes), default_value),
+          collapse=" , ")
   } else {
-    paste(names(attributes), ":", attributes, "COMPRESSION 'zlib'", collapse=" , ")
+    paste(names(attributes), ":", attributes, sapply(names(attributes), default_value),
+          "COMPRESSION 'zlib'", collapse=" , ")
   }
 }
 
@@ -45,7 +54,7 @@ get_entity_schema = function(pkgEnv, entitynm, include_entitynm = F){
   if (class(dims) == "character") {dim_str = dims} else if (class(dims) == "list"){
     dim_str = revealcore:::yaml_to_dim_str(dims)
   } else {stop("Unexpected class for dims")}
-  attr_str = revealcore:::yaml_to_attr_string(arr$attributes, arr$compression_on)
+  attr_str = revealcore:::yaml_to_attr_string(arr$attributes, arr$compression_on, arr$default_values)
   attr_str = paste("<", attr_str, ">")
   paste0(dplyr::if_else(include_entitynm, entitynm, ""), attr_str, " [", dim_str, "]")
 }
