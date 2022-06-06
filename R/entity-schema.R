@@ -226,6 +226,12 @@ get_delete_by_entity = function(pkgEnv, entitynm) {
   pkgEnv$meta$L$array[[entitynm]]$delete_by_entity
 }
 
+#' @export
+get_unique_fields = function(pkgEnv, entitynm) {
+  stopifnot(is_entity(pkgEnv, entitynm))
+  pkgEnv$meta$L$array[[entitynm]]$unique_fields
+}
+
 #' full name of array with namespace
 #'
 #' @inheritParams find_namespace
