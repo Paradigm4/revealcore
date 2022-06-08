@@ -237,8 +237,8 @@ init_arrays = function(pkgEnv,
       }, error = function(e){cat("=== faced error in creating array: ", fullnm, "_INFO\n", sep="")}
       )
     }}
-    default_value = arr$default_value
-    if (!is.null(default_value)){
+    if ("default_value" %in% names(arr)) {
+      default_value = arr[["default_value"]]
       tryCatch({
         query = paste0(
           "store(redimension(",default_value,", ",
