@@ -12,7 +12,9 @@ Depends:
     plyr,
     dplyr,
     yaml,
-    scidb
+    scidb,
+    aws.s3,
+    httr
 Imports:
     R6,
     reshape
@@ -29,6 +31,6 @@ Suggests: testthat,
     svd,
     corpcor
 VignetteBuilder: knitr
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 Roxygen: list(markdown = TRUE)
 Encoding: UTF-8
