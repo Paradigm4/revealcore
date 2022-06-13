@@ -89,7 +89,7 @@ drop_na_columns = function(df){
 #' @param df1 the values to be matched.
 #' @param df2 the values to be matched against
 #'
-#' @return
+#' @return matched indices
 #'
 #' @export
 match_df = function(df1, df2){
