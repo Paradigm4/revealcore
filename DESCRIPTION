@@ -15,12 +15,14 @@ Depends:
     scidb,
     aws.s3,
     httr,
-    urltools
+    urltools,
+    arrayop
 Imports:
     R6,
     reshape
 Remotes:
-    Paradigm4/scidbr
+    Paradigm4/scidbr,
+    Paradigm4/ArrayOpR
 License: file LICENSE
 LazyData: TRUE
 Suggests: testthat,
