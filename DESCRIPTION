@@ -14,7 +14,8 @@ Depends:
     yaml,
     scidb,
     aws.s3,
-    httr
+    httr,
+    urltools
 Imports:
     R6,
     reshape
